@@ -17,6 +17,21 @@ enum layers {
     USER_4,
 };
 
+static bool task_switcher_active = false;
+
+static bool in_task_layers(layer_state_t state) {
+    return layer_state_cmp(state, USER_1) || layer_state_cmp(state, USER_2) || layer_state_cmp(state, USER_3) || layer_state_cmp(state, USER_4);
+}
+
+static void release_task_switcher(void) {
+    if (!task_switcher_active) {
+        return;
+    }
+    unregister_code(KC_LGUI);
+    unregister_code(KC_LSFT);
+    task_switcher_active = false;
+}
+
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [MAC_BASE] = LAYOUT_ansi_90(
@@ -102,5 +117,40 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_keychron_common(keycode, record)) {
         return false;
     }
+
+    if (!in_task_layers(layer_state)) {
+        release_task_switcher();
+    }
+
+    switch (keycode) {
+        case KC_TAB:
+            if (!in_task_layers(layer_state)) {
+                return true;
+            }
+            if (!record->event.pressed) {
+                return false;
+            }
+            if (!task_switcher_active) {
+                const uint8_t mods = get_mods() | get_oneshot_mods() | get_weak_mods();
+                register_code(KC_LGUI);
+                if (mods & MOD_MASK_SHIFT) {
+                    tap_code16(S(KC_TAB));
+                } else {
+                    tap_code(KC_TAB);
+                }
+                task_switcher_active = true;
+            } else {
+                tap_code(KC_TAB);
+            }
+            return false;
+    }
+
     return true;
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    if (!layer_state_cmp(state, USER_1) && !layer_state_cmp(state, USER_2)) {
+        release_task_switcher();
+    }
+    return state;
 }
