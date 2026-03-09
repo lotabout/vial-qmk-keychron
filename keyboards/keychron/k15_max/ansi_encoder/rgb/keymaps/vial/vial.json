@@ -1,7 +1,7 @@
 {
-  "name": "Keychron K15 Max ANSI Knob RGB",
+  "name": "Keychron K15 Max ANSI RGB (Encoder)",
   "vendorId": "0x3434",
-  "productId": "0x0AF0",
+  "productId": "0x5701",
   "lighting": "vialrgb",
   "matrix": {
     "rows": 6,
